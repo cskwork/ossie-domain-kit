@@ -24,6 +24,14 @@ cd ossie-domain-kit
 cd ~/git/retail-ossie && make validate      # PASS
 ```
 
+## A worked example
+
+[**cskwork/chinook-ossie**](https://github.com/cskwork/chinook-ossie) was generated with
+this kit: the Chinook sample database modelled as 8 datasets, 7 relationships and 7
+metrics — and verified against the real `CREATE TABLE` script, not just validated against
+the schema. It also shows what the `verify` layer looks like once it is wired up
+(`scripts/verify_ddl.py`, ~230 lines, `sqlglot`-based).
+
 ## Why not just fork apache/ossie?
 
 Because apache/ossie is where the **specification** is developed — CLI,
