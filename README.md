@@ -1,8 +1,15 @@
 # ossie-domain-kit
 
+**[cskwork.github.io/ossie-domain-kit](https://cskwork.github.io/ossie-domain-kit/)** —
+what this is, in plain language.
+
 Scaffold a **domain semantic-model repository** that consumes the
 [Apache Ossie (incubating)][ossie] specification — formerly OSI, Open Semantic
 Interchange.
+
+Every tool in a company holds its own private idea of what "revenue" means. This
+kit creates the one place where the real definition lives, in an open format that
+dashboards, spreadsheets and AI assistants can all read.
 
 One command gives you a repo with the upstream schema and validator vendored
 and pinned, a passing example model, CI, an `AGENTS.md` for coding agents, and

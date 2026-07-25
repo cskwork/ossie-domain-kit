@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ossie-domain-kit — scaffold Apache Ossie semantic-model repositories</title>
+<meta name="description" content="Every tool has its own idea of what “revenue” means. ossie-domain-kit creates the repository where your company writes the real definition down — in the open Apache Ossie format that dashboards, spreadsheets and AI assistants can all read.">
+<meta property="og:title" content="ossie-domain-kit — one definition, one place">
+<meta property="og:description" content="Three tools, three answers to “how much did we sell?”. Write the definition down once, in an open format, and keep it honest.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23efebe2'/%3E%3Cpath d='M16 4v24M4 16h24' stroke='%23c2401b' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%2316130f' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..800;1,6..96,400..700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#efebe2;
+  --paper-2:#e7e2d7;
+  --ink:#16130f;
+  --ink-soft:#4a443a;
+  --muted:#7d7466;
+  --rule:#d3cbbc;
+  --rule-strong:#b8ae9c;
+  --red:#c2401b;
+  --red-wash:rgba(194,64,27,.09);
+  --green:#2f5d47;
+  --amber:#9a6b18;
+  --sheet:min(1180px, 92vw);
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --display:"Bodoni Moda", "Times New Roman", serif;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--mono);
+  font-weight:400;
+  font-size:15px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* graph paper + grain ---------------------------------------------------- */
+body::before{
+  content:"";
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(to right, rgba(22,19,15,.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22,19,15,.055) 1px, transparent 1px),
+    linear-gradient(to right, rgba(22,19,15,.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22,19,15,.028) 1px, transparent 1px);
+  background-size:96px 96px, 96px 96px, 16px 16px, 16px 16px;
+}
+body::after{
+  content:"";
+  position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.42;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+.wrap{position:relative; z-index:2}
+
+/* registration marks ----------------------------------------------------- */
+.reg{position:fixed; z-index:3; width:26px; height:26px; pointer-events:none; opacity:.5}
+.reg::before,.reg::after{content:""; position:absolute; background:var(--red)}
+.reg::before{left:50%; top:0; width:1px; height:100%; transform:translateX(-.5px)}
+.reg::after{top:50%; left:0; height:1px; width:100%; transform:translateY(-.5px)}
+.reg.tl{top:18px; left:18px} .reg.tr{top:18px; right:18px}
+.reg.bl{bottom:18px; left:18px} .reg.br{bottom:18px; right:18px}
+@media(max-width:900px){.reg{display:none}}
+
+/* type ------------------------------------------------------------------- */
+h1,h2,h3{font-family:var(--display); font-weight:500; letter-spacing:-.015em; margin:0}
+h1{font-size:clamp(3.1rem,9.4vw,7.4rem); line-height:.93; font-weight:600}
+h2{font-size:clamp(2rem,4.6vw,3.5rem); line-height:1.02}
+h3{font-size:clamp(1.15rem,2vw,1.45rem); line-height:1.2}
+em{font-style:italic}
+p{margin:0 0 1.1em}
+a{color:var(--ink); text-decoration:none}
+
+.lede{
+  font-family:var(--display); font-size:clamp(1.15rem,2.05vw,1.6rem);
+  line-height:1.5; color:var(--ink-soft); max-width:46ch; font-weight:400;
+}
+.tag{
+  font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--muted); font-weight:500;
+}
+.tag .n{color:var(--red)}
+
+/* layout ----------------------------------------------------------------- */
+.sheet{width:var(--sheet); margin-inline:auto}
+section{padding:clamp(4.5rem,10vw,8.5rem) 0; border-top:1px solid var(--rule)}
+.sec-head{display:grid; grid-template-columns:minmax(0,1fr); gap:1.4rem; margin-bottom:3.2rem}
+@media(min-width:860px){
+  .sec-head{grid-template-columns:11rem minmax(0,1fr); gap:2.5rem; align-items:start}
+}
+
+/* nav -------------------------------------------------------------------- */
+nav{
+  position:sticky; top:0; z-index:20;
+  background:color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter:blur(7px);
+  border-bottom:1px solid var(--rule);
+}
+nav .sheet{display:flex; align-items:center; justify-content:space-between; height:56px; gap:1rem}
+.brand{display:flex; align-items:baseline; gap:.6rem; font-weight:600; letter-spacing:-.01em}
+.brand .dot{width:7px; height:7px; background:var(--red); border-radius:50%; display:inline-block}
+.navlinks{display:flex; gap:1.6rem; font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.navlinks a{position:relative; padding-bottom:2px}
+.navlinks a::after{
+  content:""; position:absolute; left:0; bottom:-1px; height:1px; width:100%;
+  background:var(--red); transform:scaleX(0); transform-origin:left;
+  transition:transform .32s cubic-bezier(.2,.7,.2,1);
+}
+.navlinks a:hover{color:var(--ink)}
+.navlinks a:hover::after{transform:scaleX(1)}
+@media(max-width:760px){.navlinks a:not(.gh){display:none}}
+
+/* hero ------------------------------------------------------------------- */
+header.hero{padding:clamp(3.5rem,9vw,7rem) 0 clamp(3rem,6vw,5rem); border-top:none}
+.hero-grid{display:grid; gap:clamp(2rem,4vw,3.5rem)}
+@media(min-width:1000px){.hero-grid{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); align-items:end}}
+h1 .it{font-style:italic; font-weight:400}
+h1 .rule-through{position:relative; white-space:nowrap}
+h1 .rule-through::after{
+  content:""; position:absolute; left:-.04em; right:-.04em; top:.745em; height:.042em;
+  background:var(--red); transform:scaleX(0); transform-origin:left;
+  animation:strike 1s cubic-bezier(.2,.7,.2,1) 1.15s forwards;
+}
+@keyframes strike{to{transform:scaleX(1)}}
+
+/* title block (drafting) -------------------------------------------------- */
+.titleblock{border:1px solid var(--rule-strong); background:rgba(255,255,255,.34)}
+.titleblock .row{display:grid; grid-template-columns:8.5rem minmax(0,1fr); border-bottom:1px solid var(--rule)}
+.titleblock .row:last-child{border-bottom:none}
+.titleblock .k{
+  padding:.62rem .85rem; font-size:10.5px; letter-spacing:.15em; text-transform:uppercase;
+  color:var(--muted); border-right:1px solid var(--rule); background:rgba(22,19,15,.022);
+}
+.titleblock .v{padding:.62rem .85rem; font-size:12.5px; overflow-wrap:anywhere}
+.titleblock .v b{font-weight:600}
+
+/* command ---------------------------------------------------------------- */
+.cmd{
+  margin-top:2.6rem; border:1px solid var(--ink); background:var(--ink); color:#f2eee5;
+  box-shadow:9px 9px 0 rgba(22,19,15,.14);
+}
+.cmd-bar{
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding:.5rem .9rem; border-bottom:1px solid rgba(242,238,229,.18);
+  font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:rgba(242,238,229,.6);
+}
+.cmd-body{padding:1.1rem .95rem 1.25rem; overflow-x:auto}
+.cmd-body pre{margin:0; font-size:13.5px; line-height:2}
+.cmd-body .p{color:var(--red); user-select:none}
+.cmd-body .c{color:rgba(242,238,229,.45)}
+.cmd-body .a{color:#e8c07a}
+button.copy{
+  font:inherit; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  background:none; border:1px solid rgba(242,238,229,.3); color:rgba(242,238,229,.75);
+  padding:.2rem .6rem; cursor:pointer; transition:.2s;
+}
+button.copy:hover{border-color:var(--red); color:#fff; background:var(--red)}
+button.copy.ok{border-color:#8fbf9f; color:#8fbf9f}
+
+/* plain-terms scene ------------------------------------------------------- */
+.answers{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule)}
+@media(min-width:720px){.answers{grid-template-columns:repeat(3,1fr)}}
+.answer{background:var(--paper); padding:clamp(1.4rem,2.8vw,2.1rem); text-align:center; position:relative}
+.answer .src{display:block; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:.7rem}
+.answer .num{font-family:var(--display); font-size:clamp(2.4rem,5.4vw,3.6rem); line-height:1; display:block}
+.answer .cap{display:block; font-size:12.5px; color:var(--ink-soft); margin-top:.7rem}
+.answer:not(:last-child)::after{
+  content:"≠"; position:absolute; right:-.62em; top:50%; z-index:4;
+  transform:translate(50%,-50%); background:var(--paper); color:var(--red);
+  font-size:18px; font-weight:600; padding:.15em .3em; line-height:1;
+}
+@media(max-width:719px){
+  .answer:not(:last-child)::after{top:auto; bottom:-.62em; right:50%; transform:translate(50%,50%)}
+}
+.verdict{
+  border:1px solid var(--ink); border-top:none; background:var(--ink); color:#f2eee5;
+  padding:1.15rem 1.4rem; text-align:center; font-size:14px;
+}
+.verdict b{color:#e8c07a; font-weight:500}
+.glossary{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule); margin-top:clamp(2rem,4vw,3.2rem)}
+@media(min-width:820px){.glossary{grid-template-columns:repeat(3,1fr)}}
+.gloss{background:var(--paper); padding:clamp(1.3rem,2.6vw,2rem)}
+.gloss h3{font-size:1.2rem; margin-bottom:.55rem}
+.gloss .say{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--red); display:block; margin-bottom:.9rem}
+.gloss p{font-size:13.5px; color:var(--ink-soft); margin:0}
+
+/* comparison ------------------------------------------------------------- */
+.cols{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule)}
+@media(min-width:820px){.cols{grid-template-columns:1fr 1fr}}
+.col{background:var(--paper); padding:clamp(1.5rem,3vw,2.4rem)}
+.col.bad{background:linear-gradient(180deg, var(--red-wash), transparent 60%)}
+.col h3{margin-bottom:.9rem}
+.col .tag{display:block; margin-bottom:1.1rem}
+ul.ticks{list-style:none; margin:0; padding:0; font-size:14px}
+ul.ticks li{position:relative; padding-left:1.7rem; margin-bottom:.75rem; color:var(--ink-soft)}
+ul.ticks li::before{
+  position:absolute; left:0; top:0; font-size:13px; font-weight:600;
+}
+.bad ul.ticks li::before, ul.ticks.bad li::before{content:"✕"; color:var(--red)}
+.good ul.ticks li::before, ul.ticks.good li::before{content:"✓"; color:var(--green)}
+
+/* tree ------------------------------------------------------------------- */
+.tree-wrap{display:grid; gap:clamp(1.6rem,3vw,2.8rem)}
+@media(min-width:960px){.tree-wrap{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}}
+pre.tree{
+  margin:0; padding:clamp(1.2rem,2.4vw,1.9rem); overflow-x:auto;
+  border:1px solid var(--rule-strong); background:rgba(255,255,255,.4);
+  font-size:13px; line-height:1.95;
+}
+pre.tree b{font-weight:600}
+pre.tree .c{color:var(--muted)}
+pre.tree .hl{color:var(--red); font-weight:600}
+.notes{display:grid; gap:1.4rem; align-content:start}
+.note{border-left:2px solid var(--rule-strong); padding-left:1rem}
+.note.acc{border-left-color:var(--red)}
+.note h3{font-size:1.05rem; margin-bottom:.3rem}
+.note p{font-size:13.5px; color:var(--ink-soft); margin:0}
+
+/* layers ----------------------------------------------------------------- */
+.layers{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule)}
+@media(min-width:820px){.layers{grid-template-columns:1fr 1fr}}
+.layer{background:var(--paper); padding:clamp(1.5rem,3vw,2.4rem); position:relative}
+.layer .num{
+  font-family:var(--display); font-size:3.4rem; line-height:1; color:var(--rule-strong);
+  position:absolute; right:1.2rem; top:.9rem;
+}
+.stamp{
+  display:inline-flex; align-items:center; gap:.45rem; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; border:1px solid currentColor; padding:.18rem .55rem; margin-bottom:1rem;
+}
+.stamp.pass{color:var(--green)}
+.stamp.open{color:var(--amber)}
+.grades{display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1.3rem}
+.grade{font-size:11px; letter-spacing:.1em; text-transform:uppercase; padding:.2rem .6rem; border:1px solid}
+.grade.v{color:var(--green); border-color:var(--green); background:rgba(47,93,71,.07)}
+.grade.i{color:var(--amber); border-color:var(--amber)}
+.grade.p{color:var(--muted); border-color:var(--muted); border-style:dashed}
+
+/* agents ----------------------------------------------------------------- */
+.agent-grid{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule)}
+@media(min-width:760px){.agent-grid{grid-template-columns:repeat(3,1fr)}}
+.agent{background:var(--paper); padding:clamp(1.3rem,2.6vw,2rem)}
+.agent .tag{display:block; margin-bottom:.8rem}
+.agent p{font-size:13.5px; color:var(--ink-soft); margin:0}
+.agent code{background:var(--red-wash); padding:.05em .3em; font-size:.92em}
+blockquote{
+  margin:2.6rem 0 0; padding:1.4rem 1.6rem; border:1px solid var(--rule-strong);
+  background:rgba(255,255,255,.4); position:relative;
+}
+blockquote p{margin:0; font-family:var(--display); font-size:clamp(1.05rem,2vw,1.4rem); line-height:1.45}
+blockquote .attr{
+  font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); margin-top:.9rem; display:block;
+}
+
+/* table ------------------------------------------------------------------ */
+table{width:100%; border-collapse:collapse; font-size:13.5px}
+th,td{text-align:left; padding:.72rem .9rem; border-bottom:1px solid var(--rule); vertical-align:top}
+th{
+  font-size:10.5px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted);
+  font-weight:500; border-bottom:1px solid var(--rule-strong);
+}
+td code{color:var(--red); font-weight:500; white-space:nowrap}
+tbody tr:hover{background:rgba(255,255,255,.45)}
+
+.steps{counter-reset:s; list-style:none; margin:0; padding:0; display:grid; gap:1.5rem}
+@media(min-width:760px){.steps{grid-template-columns:repeat(3,1fr); gap:2rem}}
+.steps li{counter-increment:s; position:relative; padding-top:2.4rem; border-top:1px solid var(--rule-strong)}
+.steps li::before{
+  content:counter(s,decimal-leading-zero); position:absolute; top:.55rem; left:0;
+  font-family:var(--display); font-size:1.5rem; color:var(--red);
+}
+.steps h3{font-size:1.05rem; margin-bottom:.4rem}
+.steps p{font-size:13.5px; color:var(--ink-soft); margin:0}
+
+/* cta / footer ----------------------------------------------------------- */
+.cta{text-align:center; padding-block:clamp(5rem,11vw,9rem)}
+.cta h2{margin-bottom:1.6rem}
+.btns{display:flex; flex-wrap:wrap; gap:.9rem; justify-content:center; margin-top:2rem}
+.btn{
+  display:inline-block; padding:.72rem 1.5rem; border:1px solid var(--ink);
+  font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:500;
+  transition:.24s cubic-bezier(.2,.7,.2,1);
+}
+.btn.solid{background:var(--ink); color:var(--paper)}
+.btn.solid:hover{background:var(--red); border-color:var(--red)}
+.btn.ghost:hover{background:var(--ink); color:var(--paper)}
+footer{border-top:1px solid var(--rule); padding:2.6rem 0 3.4rem; font-size:12px; color:var(--muted)}
+footer .fgrid{display:grid; gap:1.4rem}
+@media(min-width:860px){footer .fgrid{grid-template-columns:1.6fr 1fr 1fr; gap:2.5rem}}
+footer a{border-bottom:1px solid var(--rule-strong)}
+footer a:hover{color:var(--red); border-color:var(--red)}
+footer p{margin:0 0 .5em}
+
+/* reveal ----------------------------------------------------------------- */
+.rise{opacity:0; transform:translateY(18px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1)}
+.rise.in{opacity:1; transform:none}
+.hero-grid > *{animation:rise .95s cubic-bezier(.2,.7,.2,1) both}
+.hero-grid > *:nth-child(1){animation-delay:.05s}
+.hero-grid > *:nth-child(2){animation-delay:.22s}
+@keyframes rise{from{opacity:0; transform:translateY(22px)} to{opacity:1; transform:none}}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important; transition:none!important}
+  .rise{opacity:1; transform:none}
+  h1 .rule-through::after{transform:scaleX(1)}
+}
+:focus-visible{outline:2px solid var(--red); outline-offset:3px}
+</style>
+</head>
+<body>
+<span class="reg tl"></span><span class="reg tr"></span><span class="reg bl"></span><span class="reg br"></span>
+
+<div class="wrap">
+<nav>
+  <div class="sheet">
+    <a class="brand" href="#top"><span class="dot"></span> ossie-domain-kit</a>
+    <div class="navlinks">
+      <a href="#plain">The&nbsp;problem</a>
+      <a href="#why">Why&nbsp;a&nbsp;repo</a>
+      <a href="#generates">What&nbsp;you&nbsp;get</a>
+      <a href="#layers">Staying&nbsp;true</a>
+      <a href="#agents">For&nbsp;agents</a>
+      <a class="gh" href="https://github.com/cskwork/ossie-domain-kit">GitHub&nbsp;↗</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero sheet" id="top">
+  <div class="hero-grid">
+    <div>
+      <p class="tag"><span class="n">Sheet 01</span> &nbsp;/&nbsp; Semantic model scaffold &nbsp;/&nbsp; Apache Ossie (incubating)</p>
+      <h1>Define&nbsp;it once.<br><span class="it">Pin</span> the spec.<br><span class="rule-through">Prove</span> it.</h1>
+      <p class="lede" style="margin-top:1.8rem">
+        Every tool in a company holds its own private idea of what <em>“revenue”</em>
+        means. This kit sets up one place to write the real definition down — in an
+        open format that dashboards, spreadsheets and AI assistants can all read —
+        and one command creates it.
+      </p>
+    </div>
+    <div class="titleblock">
+      <div class="row"><div class="k">Project</div><div class="v"><b>ossie-domain-kit</b></div></div>
+      <div class="row"><div class="k">Purpose</div><div class="v">Scaffold a consumer repo for the Ossie / OSI spec</div></div>
+      <div class="row"><div class="k">Spec</div><div class="v">apache/ossie — core spec <b>0.2.0.dev0</b></div></div>
+      <div class="row"><div class="k">Requires</div><div class="v">bash · python3 · curl or a local clone · uv</div></div>
+      <div class="row"><div class="k">Licence</div><div class="v">Apache-2.0 · not an ASF project</div></div>
+    </div>
+  </div>
+
+  <div class="cmd">
+    <div class="cmd-bar">
+      <span>bootstrap — 1 command</span>
+      <button class="copy" data-copy="git clone https://github.com/cskwork/ossie-domain-kit
+./ossie-domain-kit/bootstrap-ossie-domain.sh retail ~/git/retail-ossie
+cd ~/git/retail-ossie &amp;&amp; make validate">Copy</button>
+    </div>
+    <div class="cmd-body">
+<pre><span class="p">$</span> git clone https://github.com/cskwork/ossie-domain-kit
+<span class="p">$</span> ./ossie-domain-kit/bootstrap-ossie-domain.sh <span class="a">retail</span> ~/git/retail-ossie
+<span class="p">$</span> cd ~/git/retail-ossie &amp;&amp; make validate
+<span class="c">  ######## models/retail/retail_example_model.yaml</span>
+<span class="c">  Validation PASSED — all models PASSED</span></pre>
+    </div>
+  </div>
+</header>
+
+<section id="plain" class="sheet">
+  <div class="sec-head">
+    <p class="tag"><span class="n">01</span><br>In plain terms</p>
+    <div>
+      <h2>Three tools.<br>Three different <em>answers</em>.</h2>
+      <p class="lede" style="margin-top:1.4rem">
+        Monday morning. Someone asks a simple question — <em>how much did we sell
+        last month?</em> — and gets three numbers back.
+      </p>
+    </div>
+  </div>
+
+  <div class="answers rise">
+    <div class="answer">
+      <span class="src">The sales dashboard</span>
+      <span class="num">4.2M</span>
+      <span class="cap">counts an order the day it is placed</span>
+    </div>
+    <div class="answer">
+      <span class="src">The finance report</span>
+      <span class="num">3.9M</span>
+      <span class="cap">waits until the money actually arrives</span>
+    </div>
+    <div class="answer">
+      <span class="src">The AI assistant</span>
+      <span class="num">4.4M</span>
+      <span class="cap">wrote its own query, and kept the refunds in</span>
+    </div>
+  </div>
+  <div class="verdict">
+    Nobody is lying. Each tool carries its own buried definition of the same word — and
+    the argument that follows is about <b>whose SQL is right</b>, not about the business.
+  </div>
+
+  <div class="glossary">
+    <div class="gloss rise">
+      <span class="say">So what fixes it</span>
+      <h3>A semantic model</h3>
+      <p>A written-down dictionary of the business: what counts as a customer, what
+      counts as revenue, which orders don't count at all. Plain text files, kept in
+      version control, that every tool reads instead of each one guessing.</p>
+    </div>
+    <div class="gloss rise">
+      <span class="say">The open format</span>
+      <h3>Apache Ossie</h3>
+      <p>An open standard for writing that dictionary down, so it belongs to you rather
+      than to whichever BI vendor you happened to buy. Previously called OSI, Open
+      Semantic Interchange; now a project at the Apache Software Foundation.</p>
+    </div>
+    <div class="gloss rise">
+      <span class="say">What this page is for</span>
+      <h3>ossie-domain-kit</h3>
+      <p>Standards do not maintain themselves. This kit creates the repository — the
+      folder layout, the automated checks, the rules — so that a team can start one in
+      a minute and still trust it a year later.</p>
+    </div>
+  </div>
+
+  <blockquote>
+    <p>The reason this got urgent: AI assistants now write the query for you. Given a
+    definition, they use it. Given none, they invent one — and present the result with
+    exactly the same confidence.</p>
+    <span class="attr">— why a semantic layer stopped being a nice-to-have</span>
+  </blockquote>
+</section>
+
+<section id="why" class="sheet">
+  <div class="sec-head">
+    <p class="tag"><span class="n">02</span><br>The premise</p>
+    <div>
+      <h2>A fork is the wrong shape<br>for a <em>consumer</em>.</h2>
+      <p class="lede" style="margin-top:1.4rem">
+        apache/ossie is where the specification is developed — a Go CLI, converters,
+        a Python package, ASF release machinery. A repo that merely <em>uses</em> Ossie
+        to describe one domain wants almost none of it, and a fork makes it awkward to
+        track upstream while carrying your own models.
+      </p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="col bad">
+      <span class="tag">Approach A</span>
+      <h3>Fork the spec repo</h3>
+      <ul class="ticks">
+        <li>Your models land in <code>examples/</code>, tangled with upstream's own</li>
+        <li>Every upstream sync is a merge negotiation you did not ask for</li>
+        <li>You inherit CLI, converters and release tooling you will never run</li>
+        <li>Nothing records <em>which</em> revision of the spec you validated against</li>
+      </ul>
+    </div>
+    <div class="col good">
+      <span class="tag">Approach B — this kit</span>
+      <h3>Generate a consumer repo</h3>
+      <ul class="ticks">
+        <li>Models are the only first-class content; everything else is scaffolding</li>
+        <li>Schema and validator are vendored at a <em>named commit</em>, updated deliberately</li>
+        <li>Provenance is written into <code>schema/SOURCE.md</code> and <code>NOTICE</code></li>
+        <li>Spec changes stay upstream, where contributions belong</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="generates" class="sheet">
+  <div class="sec-head">
+    <p class="tag"><span class="n">03</span><br>Output</p>
+    <div>
+      <h2>What lands on disk.</h2>
+      <p class="lede" style="margin-top:1.4rem">
+        A working repository, not a folder of TODOs. The example model validates on the
+        first run, so a green build is the starting state rather than the goal.
+      </p>
+    </div>
+  </div>
+
+  <div class="tree-wrap">
+<pre class="tree rise"><b>retail-ossie/</b>
+├── <b>models/retail/</b>
+│   └── <span class="hl">retail_example_model.yaml</span>   <span class="c">← passing starter, replace it</span>
+├── <b>schema/</b>
+│   ├── osi-schema.json              <span class="c">← vendored from core-spec/</span>
+│   └── <span class="hl">SOURCE.md</span>                     <span class="c">← upstream ref + commit SHA</span>
+├── <b>scripts/</b>validate.py             <span class="c">← vendored from validation/</span>
+├── <b>docs/</b>
+│   ├── overview.md                  <span class="c">← catalogue · conventions · decisions</span>
+│   └── verification.md              <span class="c">← proving models match real schemas</span>
+├── <b>.claude/skills/</b>ossie-domain-model
+├── <b>.github/workflows/</b>validate.yml
+├── <span class="hl">AGENTS.md</span>                         <span class="c">← rules for coding agents</span>
+├── Makefile                         <span class="c">← validate · verify · check</span>
+└── README.md · LICENSE · NOTICE     <span class="c">+ git init, first commit</span></pre>
+
+    <div class="notes">
+      <div class="note acc">
+        <h3>Pinned, not floating</h3>
+        <p>The bootstrap resolves the upstream commit SHA and writes it into the generated
+        repo. Six months later you can still say exactly which revision of the spec a
+        model was written against — and what changed when you bump it.</p>
+      </div>
+      <div class="note">
+        <h3>Version is a <code>const</code></h3>
+        <p>The schema pins <code>version</code> to one literal string, read out of the
+        fetched schema rather than hardcoded. A spec bump breaks every model at once.
+        That is the intended signal, not a bug.</p>
+      </div>
+      <div class="note">
+        <h3>Fixed upstream's sharp edge</h3>
+        <p>The upstream validator takes one file per run and defaults its schema path
+        to <code>../core-spec/</code> — which does not exist in a consumer repo. The
+        generated <code>Makefile</code> loops per file and always passes
+        <code>--schema</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="layers" class="sheet">
+  <div class="sec-head">
+    <p class="tag"><span class="n">04</span><br>Two questions</p>
+    <div>
+      <h2>Valid YAML is not<br>a <em>true</em> model.</h2>
+      <p class="lede" style="margin-top:1.4rem">
+        A model can satisfy the schema perfectly and still describe a column that does
+        not exist. That is worse than having no model: an agent will confidently write
+        SQL against the fiction. So the Makefile keeps two questions apart.
+      </p>
+    </div>
+  </div>
+
+  <div class="layers">
+    <div class="layer rise">
+      <span class="num">01</span>
+      <span class="stamp pass">✓ generic — runs in CI</span>
+      <h3><code>make validate</code> — spec compliance</h3>
+      <p style="margin-top:.9rem; color:var(--ink-soft); font-size:14px">Four passes over every model:</p>
+      <ul class="ticks good" style="margin-top:.4rem">
+        <li>Structure — JSON Schema: types, enums, required keys, no stray properties</li>
+        <li>Uniqueness — no duplicate dataset, field, metric or relationship names</li>
+        <li>References — relationships point at datasets that exist</li>
+        <li>SQL — expressions parse under their declared dialect, via sqlglot</li>
+      </ul>
+    </div>
+    <div class="layer rise">
+      <span class="num">02</span>
+      <span class="stamp open">△ yours to wire up</span>
+      <h3><code>make verify</code> — reality</h3>
+      <p style="margin-top:.9rem; color:var(--ink-soft); font-size:14px">
+        Do these tables and columns actually exist, with these types? This one cannot be
+        generic — it depends on whether your source of truth is a DDL dump,
+        <code>information_schema</code>, a dbt manifest or an ERD export. It ships as a
+        <em>loud</em> no-op, never a silent pass, and <code>docs/verification.md</code>
+        walks through each case.
+      </p>
+      <p style="margin-top:1rem; color:var(--ink-soft); font-size:14px">
+        Every model then carries an honest grade in the catalogue:
+      </p>
+      <div class="grades">
+        <span class="grade v">verified</span>
+        <span class="grade i">inferred</span>
+        <span class="grade p">proposed</span>
+      </div>
+    </div>
+  </div>
+
+  <blockquote>
+    <p>Never invent a column. If you cannot find it in an artefact, leave it out and say so —
+      a plausible-looking wrong column is the single most damaging thing you can add here.</p>
+    <span class="attr">— AGENTS.md, rule 1, shipped in every generated repo</span>
+  </blockquote>
+</section>
+
+<section id="agents" class="sheet">
+  <div class="sec-head">
+    <p class="tag"><span class="n">05</span><br>Agent-ready</p>
+    <div>
+      <h2>Written for the<br>thing writing the YAML.</h2>
+      <p class="lede" style="margin-top:1.4rem">
+        Semantic models are exactly the work people now hand to coding agents — and
+        exactly the work where a confident guess does lasting damage. So the guardrails
+        ship with the repo.
+      </p>
+    </div>
+  </div>
+
+  <div class="agent-grid">
+    <div class="agent rise">
+      <span class="tag">In every generated repo</span>
+      <h3>AGENTS.md</h3>
+      <p style="margin-top:.7rem">Six hard rules, the authoring loop, the full model shape, and a
+      symptom&nbsp;→&nbsp;cause table for the errors the validator actually emits. Read by
+      Claude Code, Codex and anything else that honours the convention.</p>
+    </div>
+    <div class="agent rise">
+      <span class="tag">Installed to .claude/skills</span>
+      <h3>ossie-domain-model</h3>
+      <p style="margin-top:.7rem">An authoring skill: bootstrap or extend a repo, draft against the
+      spec, validate, and review someone else's model. Two references — a spec cheat sheet
+      and a guide to gathering evidence from DDL, dbt, ORM entities and SQL mappers.</p>
+    </div>
+    <div class="agent rise">
+      <span class="tag">Trust ordering</span>
+      <h3>Evidence first</h3>
+      <p style="margin-top:.7rem"><code>information_schema</code> over a DDL dump, over a dbt manifest,
+      over an ERD, over ORM entities, over SQL mappers. Anything below rank four yields an
+      <em>inferred</em> model — and the catalogue has to say so.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sheet">
+  <div class="sec-head">
+    <p class="tag"><span class="n">06</span><br>Usage</p>
+    <div><h2>Three moves.</h2></div>
+  </div>
+
+  <ol class="steps" style="margin-bottom:3.6rem">
+    <li>
+      <h3>Bootstrap</h3>
+      <p><code>./bootstrap-ossie-domain.sh &lt;domain&gt; [target]</code> — fetch, pin, stamp,
+      <code>git init</code>. Nothing is ever pushed; the remote is your call.</p>
+    </li>
+    <li>
+      <h3>Model</h3>
+      <p>Read the source of truth, replace the example, record where each definition came
+      from in the file header. <code>make validate</code> until it passes.</p>
+    </li>
+    <li>
+      <h3>Verify</h3>
+      <p>Wire <code>make verify</code> to your warehouse, dump or manifest — then grade
+      each model honestly in <code>docs/overview.md</code>.</p>
+    </li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr><th style="width:14rem">Flag</th><th>Effect</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>&lt;domain&gt;</code></td><td>Domain slug, lowercase <code>[a-z0-9-]</code>. Names the model folder and the starter file.</td></tr>
+      <tr><td><code>[target-dir]</code></td><td>Where to create the repo. Defaults to <code>./&lt;domain&gt;-ossie</code>. Refuses a non-empty directory.</td></tr>
+      <tr><td><code>--from-clone DIR</code></td><td>Vendor from a local apache/ossie clone instead of downloading — offline, and pins that clone's HEAD.</td></tr>
+      <tr><td><code>--ref REF</code></td><td>Upstream branch, tag or SHA to pull from. Defaults to <code>main</code>.</td></tr>
+      <tr><td><code>--no-git</code></td><td>Skip <code>git init</code> and the initial commit.</td></tr>
+      <tr><td><code>--no-skill</code></td><td>Do not install the authoring skill into <code>.claude/skills/</code>.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="cta sheet">
+  <p class="tag"><span class="n">07</span> &nbsp;/&nbsp; Start</p>
+  <h2 style="margin-top:1.2rem">One definition.<br><em>One place.</em></h2>
+  <p class="lede" style="margin:1.4rem auto 0">
+    Agents, dashboards and analysts should all answer <em>“what is net revenue?”</em>
+    the same way. Give that answer somewhere to live.
+  </p>
+  <div class="btns">
+    <a class="btn solid" href="https://github.com/cskwork/ossie-domain-kit">Get the kit ↗</a>
+    <a class="btn ghost" href="https://github.com/apache/ossie">Apache Ossie ↗</a>
+  </div>
+</section>
+
+<footer>
+  <div class="sheet fgrid">
+    <div>
+      <p><b>ossie-domain-kit</b> — Apache License 2.0.</p>
+      <p>No Apache Ossie sources are redistributed here; the schema and validator are
+      fetched at bootstrap time and their provenance recorded in each generated repo.</p>
+    </div>
+    <div>
+      <p class="tag" style="margin-bottom:.6rem">Links</p>
+      <p><a href="https://github.com/cskwork/ossie-domain-kit">Repository</a></p>
+      <p><a href="https://github.com/apache/ossie">apache/ossie</a></p>
+      <p><a href="https://github.com/apache/ossie/blob/main/core-spec/spec.md">Core specification</a></p>
+    </div>
+    <div>
+      <p class="tag" style="margin-bottom:.6rem">Notice</p>
+      <p>Not affiliated with or endorsed by the Apache Software Foundation. Apache Ossie is
+      undergoing incubation at the ASF; “Apache” and the feather logo are ASF trademarks.</p>
+    </div>
+  </div>
+</footer>
+</div>
+
+<script>
+document.querySelectorAll("button.copy").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var text = b.getAttribute("data-copy");
+    var done = function () {
+      var prev = b.textContent;
+      b.textContent = "Copied"; b.classList.add("ok");
+      setTimeout(function () { b.textContent = prev; b.classList.remove("ok"); }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {});
+    }
+  });
+});
+
+var io = new IntersectionObserver(function (entries) {
+  entries.forEach(function (e) {
+    if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+  });
+}, { rootMargin: "0px 0px -12% 0px" });
+
+document.querySelectorAll(".rise").forEach(function (el, i) {
+  el.style.transitionDelay = (i % 3) * 90 + "ms";
+  io.observe(el);
+});
+</script>
+</body>
+</html>

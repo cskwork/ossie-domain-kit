@@ -14,6 +14,19 @@ industry.
 bootstrap-ossie-domain.sh    the tool
 template/                    files copied into every generated repo
 skills/ossie-domain-model/   authoring skill, installed into generated repos
+docs/index.html              landing page, served by GitHub Pages from /docs
+```
+
+`docs/index.html` is standalone — no build step, no dependencies beyond a Google
+Fonts link. Its first section explains the problem in plain language for
+non-technical readers; keep it that way. If you change the CLI flags or the
+generated layout, update the page's usage table and file tree in the same commit.
+Verify visually before claiming done:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+  --window-size=1440,10500 --virtual-time-budget=9000 \
+  --screenshot=/tmp/lp.png docs/index.html
 ```
 
 ## Hard rules
