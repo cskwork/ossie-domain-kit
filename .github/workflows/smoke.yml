@@ -1,0 +1,41 @@
+name: smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bootstrap:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Bootstrap a domain repo
+        run: ./bootstrap-ossie-domain.sh smoke "$RUNNER_TEMP/smoke-ossie" --no-git
+
+      - name: Generated repo validates
+        working-directory: ${{ runner.temp }}/smoke-ossie
+        run: make validate
+
+      - name: Provenance was recorded
+        working-directory: ${{ runner.temp }}/smoke-ossie
+        run: |
+          grep -q 'osi-schema.json' schema/SOURCE.md
+          ! grep -rq '{{' README.md AGENTS.md Makefile docs schema/SOURCE.md \
+            models NOTICE || { echo "unsubstituted placeholder left behind"; exit 1; }
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: shellcheck bootstrap-ossie-domain.sh

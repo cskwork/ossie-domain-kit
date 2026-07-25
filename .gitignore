@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+.python-version
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# sed -i.bak leftovers, scratch bootstrap output
+*.bak
+/tmp/
+/out/

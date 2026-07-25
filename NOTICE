@@ -1,0 +1,17 @@
+ossie-domain-kit
+Copyright 2026 ossie-domain-kit contributors
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+This project is not affiliated with, endorsed by, or a product of The Apache
+Software Foundation. It is a third-party scaffolding tool for repositories that
+consume the Apache Ossie (incubating) specification.
+
+No Apache Ossie sources are redistributed in this repository. The bootstrap
+script downloads `core-spec/osi-schema.json` and `validation/validate.py` from
+apache/ossie at run time and records their provenance in each generated
+repository's schema/SOURCE.md and NOTICE.
+
+Apache Ossie is an effort undergoing incubation at The Apache Software
+Foundation (ASF). "Apache", "Apache Ossie", and the Apache feather logo are
+trademarks of The Apache Software Foundation.

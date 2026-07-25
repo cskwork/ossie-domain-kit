@@ -1,0 +1,139 @@
+# {{DOMAIN_TITLE}} — example semantic model.
+#
+# This file exists so `make validate` passes on a fresh repo and so you have a
+# working shape to copy. Replace it with real datasets; do not ship it.
+#
+# Source of truth: <where these tables are defined — DDL dump, dbt, warehouse>
+# Evidence:        <commit/snapshot the definitions below were read from>
+# Verified:        no — example data
+---
+version: "{{SPEC_VERSION}}"
+
+semantic_model:
+  - name: {{DOMAIN}}_example
+    description: >-
+      Example {{DOMAIN_TITLE}} model: orders joined to customers, with one
+      metric. Shows every construct the validator checks — datasets, fields,
+      relationships, metrics, and dialect expressions.
+    ai_context:
+      instructions: >-
+        Example model only. Replace before pointing an agent or BI tool at it.
+      synonyms:
+        - example
+        - starter
+
+    datasets:
+      - name: orders
+        source: analytics.public.orders
+        description: One row per placed order.
+        primary_key:
+          - order_id
+        fields:
+          - name: order_id
+            label: Order ID
+            description: Surrogate key of the order.
+            datatype: String
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: order_id
+
+          - name: customer_id
+            label: Customer ID
+            description: Foreign key to customers.
+            datatype: String
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: customer_id
+
+          - name: ordered_at
+            label: Ordered At
+            description: When the order was placed, in UTC.
+            datatype: DateTimeTz
+            dimension:
+              is_time: true
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: ordered_at
+
+          - name: net_amount
+            label: Net Amount
+            description: Gross amount minus discounts, excluding tax.
+            datatype: Decimal
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: gross_amount - discount_amount
+
+          - name: status
+            label: Status
+            description: Order lifecycle state (placed, shipped, cancelled).
+            datatype: String
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: status
+
+      - name: customers
+        source: analytics.public.customers
+        description: One row per customer account.
+        primary_key:
+          - customer_id
+        fields:
+          - name: customer_id
+            label: Customer ID
+            datatype: String
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: customer_id
+
+          - name: country_code
+            label: Country
+            description: ISO 3166-1 alpha-2 country code of the billing address.
+            datatype: String
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: country_code
+
+    relationships:
+      - name: orders_to_customers
+        from: orders
+        to: customers
+        from_columns:
+          - customer_id
+        to_columns:
+          - customer_id
+
+    metrics:
+      - name: net_revenue
+        description: >-
+          Sum of net_amount over non-cancelled orders. The single agreed
+          definition of revenue for {{DOMAIN_TITLE}} — do not redefine downstream.
+        datatype: Decimal
+        ai_context:
+          instructions: >-
+            Cancelled orders are excluded. Use this instead of summing
+            gross_amount, which double-counts discounts.
+          synonyms:
+            - revenue
+            - net sales
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: >-
+                SUM(CASE WHEN orders.status <> 'cancelled'
+                         THEN orders.net_amount ELSE 0 END)
+
+      - name: order_count
+        description: Number of non-cancelled orders.
+        datatype: Integer
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: >-
+                COUNT(DISTINCT CASE WHEN orders.status <> 'cancelled'
+                                    THEN orders.order_id END)
