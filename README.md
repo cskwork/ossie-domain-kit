@@ -3,6 +3,8 @@
 **[cskwork.github.io/ossie-domain-kit](https://cskwork.github.io/ossie-domain-kit/)** —
 what this is, in plain language.
 
+[![ossie-domain-kit — define it once, pin the spec, prove it](docs/preview.png)](https://cskwork.github.io/ossie-domain-kit/)
+
 Scaffold a **domain semantic-model repository** that consumes the
 [Apache Ossie (incubating)][ossie] specification — formerly OSI, Open Semantic
 Interchange.
