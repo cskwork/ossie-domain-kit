@@ -16,6 +16,7 @@ lives.
 ├── schema/
 │   ├── osi-schema.json         # vendored Ossie Core schema
 │   └── SOURCE.md               # upstream ref/commit + how to update
+├── core-spec -> schema/         # validator compatibility link
 ├── scripts/validate.py         # vendored Ossie validator
 ├── docs/
 │   ├── overview.md             # model catalogue, conventions, decisions
@@ -29,8 +30,8 @@ upstream to [apache/ossie][ossie].
 
 ## Validate
 
-Requires [uv](https://docs.astral.sh/uv/) (it installs `pyyaml`, `jsonschema`
-and `sqlglot` on demand from the script's inline metadata).
+Requires [uv](https://docs.astral.sh/uv/). The generated `Makefile` installs
+`pyyaml`, `jsonschema`, and `sqlglot` on demand for the vendored validator.
 
 ```bash
 make validate                                 # every model under models/

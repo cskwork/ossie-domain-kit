@@ -1,9 +1,10 @@
 # Verification: proving the model matches reality
 
 `make validate` answers *"is this valid Ossie?"*. It says nothing about whether
-`analytics.public.orders.net_amount` exists, or is a `Decimal`, or is the column
-your BI tool actually reads. A spec-valid model that lies about the warehouse is
-worse than no model — agents will confidently generate broken SQL.
+`analytics.public.orders.net_amount` exists, has the expected physical type, or
+is the column your BI tool actually reads. A spec-valid model that lies about
+the warehouse is worse than no model — agents will confidently generate broken
+SQL.
 
 So every serious domain repo needs a second layer: **verify**. What that layer
 is depends on what your source of truth is.
@@ -12,7 +13,7 @@ is depends on what your source of truth is.
 
 | You have | Verification approach |
 | --- | --- |
-| A DDL dump (`mysqldump --no-data`, `pg_dump -s`) | Parse the dump, compare table/column existence, datatype, primary key |
+| A DDL dump (`mysqldump --no-data`, `pg_dump -s`) | Parse the dump; compare tables, columns, and keys; retain physical types as evidence |
 | A live warehouse | Query `information_schema.columns` / `INFORMATION_SCHEMA` and diff |
 | dbt | Read `target/manifest.json` — nodes, columns, tests |
 | An ERD tool (eXERD, dbdiagram, ERwin) | Export to DDL first, then treat as the DDL case |
@@ -25,8 +26,9 @@ Whatever the source, the check is the same three questions per field:
 
 1. Does the table in `dataset.source` exist?
 2. Does every column referenced by a field expression exist in it?
-3. Does the declared `datatype` match the physical type, and does
-   `primary_key` match the real key?
+3. Does `primary_key` match the real key? Preserve physical types in the
+   verifier evidence when they affect meaning, even when the local schema has
+   no field-type key.
 
 Wire it into the `verify` target in the `Makefile`, replacing the placeholder:
 

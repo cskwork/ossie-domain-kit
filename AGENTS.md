@@ -76,10 +76,10 @@ list. `{{SPEC_VERSION}}` is read out of the fetched schema (the spec pins
 
 ## Upstream facts worth remembering
 
-- The upstream validator handles **one file per invocation** and defaults its
-  schema path to `../core-spec/osi-schema.json` relative to itself — wrong in a
-  generated repo. The generated `Makefile` therefore loops over files and always
-  passes `--schema schema/osi-schema.json`. Do not "simplify" that loop.
+- The upstream validator handles **one file per invocation** and resolves its
+  schema at `../core-spec/osi-schema.json` relative to itself. Bootstrap creates
+  a `core-spec -> schema` compatibility link, and the generated `Makefile` loops
+  over files. Do not remove that link or "simplify" the loop.
 - `version` is a schema `const`. A spec bump breaks every existing model by
   design; that is the intended signal, not a bug to work around.
 - The `ossie` Go CLI's `validate` and `convert` are stubs at the time of

@@ -32,18 +32,18 @@ over anything here.
    every enum: `references/spec-reference.md`.
 3. **Record evidence in the file header**: what you read, which commit or
    snapshot, and whether each dataset is *verified*, *inferred*, or *proposed*.
-4. **Validate**: `make validate FILE=<file>` (or
-   `uv run scripts/validate.py <file> --schema schema/osi-schema.json`).
-   Iterate until PASS — never report done on a failing model.
+4. **Validate**: `make validate FILE=<file>`. Iterate until PASS — never
+   report done on a failing model.
 5. **Verify against reality** if the repo has a verifier: `make verify`.
 6. **Update `docs/overview.md`** — catalogue row, plus any decision that the
    YAML cannot express (why a metric excludes a status, why two tables merged).
 
 ## Rules that matter more than the schema
 
-- **Never invent a column, table, or datatype.** Not found in an artefact →
-  leave it out and say so. This is the failure mode that destroys trust in a
-  semantic layer.
+- **Never invent a column or table.** Not found in an artefact → leave it out
+  and say so. Keep physical types as evidence, but add only keys allowed by the
+  local schema. This is the failure mode that destroys trust in a semantic
+  layer.
 - **`version:` is a `const`** in the schema. Copy the exact string from
   `schema/SOURCE.md`; anything else fails immediately.
 - **`additionalProperties: false` everywhere.** An unknown or misspelled key is
@@ -77,8 +77,8 @@ Check in this order — cheapest disqualifier first:
 2. Does every `source` table and every referenced column exist in the evidence?
 3. Do two metrics compute the same number under different names?
 4. Does each metric's SQL match its prose description?
-5. Are `datatype`s consistent with the physical schema (especially `Decimal` vs
-   `Float` for money, `DateTimeTz` vs `DateTime`)?
+5. Do physical types support the definition (for example, money versus a
+   floating-point value) without adding keys unsupported by the local schema?
 6. Is the verification status in `docs/overview.md` honest?
 
 ## References

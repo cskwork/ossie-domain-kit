@@ -1,7 +1,9 @@
 # Evidence: building a model from what actually exists
 
-The rule: **every dataset, field, and datatype in a model traces to something
-you read.** This file is about where to read it and how much to trust it.
+The rule: **every dataset and field in a model traces to something you read.**
+Physical types should trace to evidence too, even when the local Ossie schema
+does not expose a type field. This file is about where to read it and how much
+to trust it.
 
 ## Trust ordering
 
@@ -12,7 +14,7 @@ you read.** This file is about where to read it and how much to trust it.
 | 3 | dbt `target/manifest.json` | models, columns, descriptions, tests, lineage | describes dbt's view, not necessarily the warehouse |
 | 4 | ERD exports (eXERD, ERwin, dbdiagram) | types, PKs, intended relationships | design artefacts lag migrations |
 | 5 | ORM entities / migrations | columns, types | migrations may be unapplied in some environments |
-| 6 | SQL mappers, handwritten queries (MyBatis, raw SQL) | column *existence* and usage only | no types, no PKs — never infer a datatype from these |
+| 6 | SQL mappers, handwritten queries (MyBatis, raw SQL) | column *existence* and usage only | no types, no PKs — do not treat type evidence as verified |
 | 7 | API responses, UI screens | business meaning, synonyms | field names are renamed on the way out |
 
 Anything at rank 5 or below produces an **inferred** model, not a verified one.
@@ -21,9 +23,9 @@ Anything at rank 5 or below produces an **inferred** model, not a verified one.
 
 **DDL dump → dataset skeleton.** Parse `CREATE TABLE` statements; each becomes a
 candidate dataset, each column a candidate field, `PRIMARY KEY (...)` becomes
-`primary_key`. Map physical types to the spec enum — `DECIMAL`/`NUMERIC` →
-`Decimal`, `TIMESTAMP WITH TIME ZONE` → `DateTimeTz`, `TIMESTAMP` → `DateTime`,
-`JSON`/`GEOMETRY` → `Opaque`.
+`primary_key`. Preserve physical types in the evidence used by the verifier.
+The default 0.1.1 schema has no portable `datatype` key; add only keys permitted
+by the vendored `schema/osi-schema.json` for this repository.
 
 **Warehouse → dataset skeleton.**
 
@@ -44,8 +46,8 @@ for Ossie `relationships`.
 
 **Application code → model.** Grep the mappers/queries for each table, collect
 the columns actually selected, and take *only existence* from them. Get types
-from a rank 1–4 artefact, or declare the model inferred and say the datatypes
-are unconfirmed.
+from a rank 1–4 artefact, or declare the model inferred and say the physical
+types are unconfirmed.
 
 ## Don't model everything
 
@@ -88,6 +90,6 @@ one unrecoverable mistake in a semantic layer.
 #
 # Source of truth: information_schema @ analytics-prod
 # Evidence:        .evidence/columns-2026-07-25.csv
-# Verified:        yes — `make verify` (datatypes + PKs)
+# Verified:        yes — `make verify` (tables, columns + PKs)
 # Notes:           tb_legacy_* excluded; superseded by orders_v2 in 2026-03
 ```

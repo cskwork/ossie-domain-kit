@@ -5,8 +5,7 @@
 # Only the first one is generic; see docs/verification.md for the second.
 
 MODELS := $(shell find models -name '*.yaml' 2>/dev/null | sort)
-SCHEMA := schema/osi-schema.json
-VALIDATE := uv run scripts/validate.py
+VALIDATE := uv run --with pyyaml --with jsonschema --with sqlglot scripts/validate.py
 
 .PHONY: help validate verify check
 
@@ -18,12 +17,12 @@ help:
 
 validate:
 ifdef FILE
-	@$(VALIDATE) $(FILE) --schema $(SCHEMA)
+	@$(VALIDATE) $(FILE)
 else
 	@test -n "$(MODELS)" || { echo "no models found under models/"; exit 1; }
 	@fail=0; for m in $(MODELS); do \
 	  echo "######## $$m"; \
-	  $(VALIDATE) $$m --schema $(SCHEMA) || fail=1; \
+	  $(VALIDATE) $$m || fail=1; \
 	done; \
 	if [ $$fail -ne 0 ]; then echo; echo "validation FAILED"; exit 1; fi; \
 	echo; echo "all models PASSED"

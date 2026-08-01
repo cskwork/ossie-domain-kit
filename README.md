@@ -9,6 +9,13 @@ Scaffold a **domain semantic-model repository** that consumes the
 [Apache Ossie (incubating)][ossie] specification — formerly OSI, Open Semantic
 Interchange.
 
+![Apache Ossie turns raw data tables into a shared semantic model of datasets, relationships, and metrics so AI assistants, BI dashboards, and spreadsheets can use the same definitions.](docs/ossie-explained.png)
+
+Ossie gives downstream tools a common definition; it does not automatically
+connect them or synchronize data. Schema validation checks a model's structure
+and references only. Proving that its tables and columns match real data is a
+separate verification step.
+
 Every tool in a company holds its own private idea of what "revenue" means. This
 kit creates the one place where the real definition lives, in an open format that
 dashboards, spreadsheets and AI assistants can all read.
@@ -51,6 +58,7 @@ leaves the rest upstream.
 ├── schema/
 │   ├── osi-schema.json        # vendored from apache/ossie core-spec/
 │   └── SOURCE.md              # upstream ref + commit SHA + update procedure
+├── core-spec -> schema/        # validator compatibility link
 ├── scripts/validate.py        # vendored from apache/ossie validation/
 ├── docs/
 │   ├── overview.md            # model catalogue, conventions, decisions
@@ -70,8 +78,8 @@ Nothing is pushed anywhere — creating the remote is your call.
 ```
 ./bootstrap-ossie-domain.sh <domain> [target-dir] [options]
 
-  --from-clone DIR   use a local apache/ossie clone instead of downloading
-  --ref REF          upstream branch/tag/SHA to pull from (default: main)
+  --from-clone DIR   use a local apache/ossie clone at the requested ref
+  --ref REF          upstream branch/tag/SHA to pull from (default: osi-0.1.1-rc1)
   --no-git           skip git init + initial commit
   --no-skill         do not install the authoring skill
 ```
@@ -79,11 +87,13 @@ Nothing is pushed anywhere — creating the remote is your call.
 The domain slug is lowercase `[a-z0-9-]`; target defaults to `./<domain>-ossie`.
 Both the schema and the validator are pinned, and the resolved commit SHA is
 written into `schema/SOURCE.md` and `NOTICE` so a generated repo can always say
-exactly which spec revision it was built against.
+exactly which spec revision it was built against. The default is the
+`osi-0.1.1-rc1` upstream tag (the 0.1.1 release candidate); use `--ref main`
+only when you deliberately want the development schema.
 
 Requires `bash`, `python3` (for stamping and validation), and either `curl` or
 `--from-clone`. Model validation itself uses [uv](https://docs.astral.sh/uv/),
-which resolves the validator's dependencies from its inline script metadata.
+which resolves `pyyaml`, `jsonschema`, and `sqlglot` on demand.
 
 ## The two-layer discipline
 

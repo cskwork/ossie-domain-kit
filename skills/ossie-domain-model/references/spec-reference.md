@@ -1,20 +1,24 @@
 # Ossie core spec — working reference
 
-Derived from `core-spec/osi-schema.json` in apache/ossie (spec version
-`0.2.0.dev0`). The vendored schema in your repo is authoritative; when they
-disagree, believe the schema and update this file.
+This is a quick reference for the default upstream tag, `osi-0.1.1-rc1`
+(spec version `0.1.1`). The vendored `schema/osi-schema.json` in a generated
+repository is authoritative. If that repository was bootstrapped with another
+`--ref` (especially `main`), read its schema instead of assuming this reference
+still applies.
 
 ## Top level
 
 ```yaml
-version: "0.2.0.dev0"   # const — must equal the version pinned by your schema
+version: "0.1.1"       # const — must equal the version pinned by your schema
+dialects: [ANSI_SQL]   # optional supported-dialect declaration
+vendors: [COMMON]      # optional vendor declaration for custom extensions
 semantic_model: [ ... ] # required, array of models
 ```
 
-Only these two keys exist at the root. `additionalProperties: false` applies at
-every level of the schema.
+Only `version`, `dialects`, `vendors`, and `semantic_model` are valid at the
+root in the default schema. `additionalProperties: false` applies at every level.
 
-## SemanticModel
+## Semantic model
 
 Required: `name`, `datasets`.
 
@@ -22,11 +26,11 @@ Required: `name`, `datasets`.
 | --- | --- |
 | `name` | Unique within the file |
 | `description` | Prose; what this model covers |
-| `ai_context` | String, or object `{instructions, synonyms[], examples[]}` |
-| `datasets` | Required, array |
+| `ai_context` | String, or object with `instructions`, `synonyms`, and `examples` |
+| `datasets` | Required array |
 | `relationships` | Joins between datasets **in this model only** |
 | `metrics` | Model-level; may reference any dataset in the model |
-| `custom_extensions` | Vendor-specific escape hatch |
+| `custom_extensions` | Vendor-specific extension array |
 
 ## Dataset
 
@@ -36,13 +40,14 @@ Required: `name`, `source`.
 | --- | --- |
 | `name` | Logical name; unique within the model |
 | `source` | Physical reference — `database.schema.table`, a view, or a query |
-| `primary_key` | Array of column names (composite keys: list them all) |
-| `unique_keys` | Additional uniqueness constraints |
+| `primary_key` | Array of column names (list every column of a composite key) |
+| `unique_keys` | Array of unique-key column lists |
 | `description`, `ai_context` | As above |
 | `fields` | Array of Field |
+| `custom_extensions` | Vendor-specific extension array |
 
 `source` is a free string. Be consistent across the repo — either always
-fully-qualified or always schema-relative, never mixed.
+fully qualified or always schema relative, never mixed.
 
 ## Field
 
@@ -52,22 +57,23 @@ Required: `name`, `expression`.
 | --- | --- |
 | `name` | Unique within the dataset |
 | `expression` | Required — `{dialects: [{dialect, expression}]}` |
-| `datatype` | Enum, below |
-| `dimension` | `{is_time: true}` — mark time dimensions, nothing else goes here |
-| `label` | Human-facing name; use when `name` mirrors a cryptic column |
+| `dimension` | `{is_time: true}` — mark time dimensions |
+| `label` | Human-facing name when `name` mirrors a cryptic column |
 | `description`, `ai_context` | As above |
+| `custom_extensions` | Vendor-specific extension array |
 
-A field expression is usually just the column name, but it can be any
-expression over the dataset's source (`gross_amount - discount_amount`,
-`LOWER(email)`).
+A field expression is usually a column name, but it can be any expression over
+the dataset source (`gross_amount - discount_amount`, `LOWER(email)`). The
+default 0.1.1 schema does **not** allow a `datatype` key on a field.
 
 ## Metric
 
-Required: `name`, `expression`. Optional: `description`, `datatype`,
-`ai_context`, `custom_extensions`.
+Required: `name`, `expression`. Optional: `description`, `ai_context`, and
+`custom_extensions`.
 
 Metrics are aggregations. Qualify columns with the dataset name
-(`SUM(orders.net_amount)`) so the definition is unambiguous.
+(`SUM(orders.net_amount)`) so the definition is unambiguous. The default 0.1.1
+schema does **not** allow a `datatype` key on a metric.
 
 ## Relationship
 
@@ -81,58 +87,49 @@ Required: **all five** of `name`, `from`, `to`, `from_columns`, `to_columns`.
   to_columns: [customer_id]
 ```
 
-Composite keys: list the columns in matching order in both arrays.
+Composite keys list columns in matching order in both arrays. A relationship
+cannot cross model files.
 
-## Enums
+## Enums and extensions
 
-**`datatype`** — `String`, `Integer`, `Decimal`, `Float`, `Boolean`, `Date`,
-`Time`, `DateTime`, `DateTimeTz`, `Opaque`.
+**`dialect`** — `ANSI_SQL`, `SNOWFLAKE`, `MDX`, `TABLEAU`, `DATABRICKS`, or
+`MAQL`. Write `ANSI_SQL` unless engine-specific syntax is necessary; add a
+second expression instead of replacing the portable one. `MDX`, `TABLEAU`, and
+`MAQL` expressions are skipped by the SQL parser.
 
-Money is `Decimal`, never `Float`. Anything with a timezone is `DateTimeTz`.
-`Opaque` is for types the spec cannot express (JSON blobs, geometry) — use it
-rather than lying with `String`.
-
-**`dialect`** — `ANSI_SQL`, `SNOWFLAKE`, `MDX`, `TABLEAU`, `DATABRICKS`,
-`MAQL`, `BIGQUERY`.
-
-Write `ANSI_SQL` unless you need engine-specific syntax; add other dialects
-alongside it rather than replacing it. `MDX`, `TABLEAU` and `MAQL` expressions
-are skipped by the SQL parser.
+**`custom_extensions`** — an array of `{vendor_name, data}` objects. In the
+default schema, `vendor_name` is one of `COMMON`, `SNOWFLAKE`, `SALESFORCE`,
+`DBT`, `DATABRICKS`, or `GOODDATA`; `data` is a JSON string. Prefer this escape
+hatch over an invented top-level key, and document non-portable data in
+`docs/overview.md`.
 
 ## What the validator checks
 
 `scripts/validate.py` (vendored from `validation/validate.py`) runs four passes:
 
-1. **Schema** — structure, types, enums, required keys, `additionalProperties`.
-2. **Unique names** — datasets and metrics and relationships within a model;
+1. **Schema** — structure, types, enums, required keys, and
+   `additionalProperties`.
+2. **Unique names** — datasets, metrics, and relationships within a model;
    fields within a dataset.
-3. **References** — `from`/`to` name datasets that exist in the same model.
-4. **SQL** — each dialect expression parses via `sqlglot`, first standalone,
-   then as `SELECT <expr>`. Best-effort: missing `sqlglot` yields a warning, not
-   an error.
+3. **References** — `from` and `to` name datasets in the same model.
+4. **SQL** — each expression parses through `sqlglot`, first standalone and
+   then as `SELECT <expr>`. `MDX`, `TABLEAU`, and `MAQL` are skipped.
 
-The upstream validator takes **one file at a time** and defaults its schema
-path to `../core-spec/osi-schema.json` relative to itself — which does not exist
-in a domain repo. Always pass `--schema schema/osi-schema.json`; the generated
-`Makefile` loops over files and does this for you.
+The upstream validator handles one file per invocation and resolves its schema
+at `../core-spec/osi-schema.json`. Bootstrap creates the `core-spec -> schema`
+compatibility link, and `make validate` loops over model files while installing
+`pyyaml`, `jsonschema`, and `sqlglot` with `uv` for the invocation.
 
 ## Error → cause
 
 | Message | Cause |
 | --- | --- |
-| `[Schema] (root): '0.2.0.dev0' was expected` | `version` mismatch with the vendored schema |
-| `[Schema] ...: Additional properties are not allowed` | typo'd or non-spec key |
-| `[Schema] ...: 'expression' is a required property` | field/metric without `expression.dialects` |
-| `[Schema] ...: '<x>' is not one of [...]` | bad `datatype` or `dialect` |
+| `[Schema] (root): '0.1.1' was expected` | `version` mismatches the vendored schema |
+| `[Schema] ...: Additional properties are not allowed` | typo'd or unsupported key (for the default schema, often `datatype`) |
+| `[Schema] ...: 'expression' is a required property` | field or metric has no `expression.dialects` |
+| `[Schema] ...: '<x>' is not one of [...]` | unsupported `dialect` or extension vendor |
 | `[Unique] Duplicate ...` | repeated name at the same level |
-| `[Reference] ... references unknown dataset` | relationship crosses model files, or dataset typo |
+| `[Reference] ... references unknown dataset` | relationship crosses model files, or has a dataset typo |
 | `[SQL] ...` | expression fails to parse in its dialect |
-| `Error: Schema not found` | `--schema` missing |
-| `Missing dependencies` | run under `uv`, or `pip install pyyaml jsonschema sqlglot` |
-
-## Beyond the core spec
-
-`custom_extensions` exists for vendor concepts the core spec has no room for.
-Prefer it over inventing top-level keys — the latter fails validation, the
-former is explicitly allowed. Anything you put there is, by definition, not
-portable; note it in `docs/overview.md`.
+| `Error: Schema not found` | `core-spec -> schema` compatibility link is missing or broken |
+| `Missing dependencies` | use `make validate`, or install `pyyaml` and `jsonschema` |

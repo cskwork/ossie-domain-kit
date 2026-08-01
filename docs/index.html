@@ -350,7 +350,7 @@ footer p{margin:0 0 .5em}
     <div class="titleblock">
       <div class="row"><div class="k">Project</div><div class="v"><b>ossie-domain-kit</b></div></div>
       <div class="row"><div class="k">Purpose</div><div class="v">Scaffold a consumer repo for the Ossie / OSI spec</div></div>
-      <div class="row"><div class="k">Spec</div><div class="v">apache/ossie — core spec <b>0.2.0.dev0</b></div></div>
+      <div class="row"><div class="k">Spec</div><div class="v">apache/ossie — core spec <b>0.1.1</b> · osi-0.1.1-rc1</div></div>
       <div class="row"><div class="k">Requires</div><div class="v">bash · python3 · curl or a local clone · uv</div></div>
       <div class="row"><div class="k">Licence</div><div class="v">Apache-2.0 · not an ASF project</div></div>
     </div>
@@ -496,6 +496,7 @@ cd ~/git/retail-ossie &amp;&amp; make validate">Copy</button>
 ├── <b>schema/</b>
 │   ├── osi-schema.json              <span class="c">← vendored from core-spec/</span>
 │   └── <span class="hl">SOURCE.md</span>                     <span class="c">← upstream ref + commit SHA</span>
+├── <b>core-spec</b> → schema/              <span class="c">← validator compatibility link</span>
 ├── <b>scripts/</b>validate.py             <span class="c">← vendored from validation/</span>
 ├── <b>docs/</b>
 │   ├── overview.md                  <span class="c">← catalogue · conventions · decisions</span>
@@ -521,10 +522,9 @@ cd ~/git/retail-ossie &amp;&amp; make validate">Copy</button>
       </div>
       <div class="note">
         <h3>Fixed upstream's sharp edge</h3>
-        <p>The upstream validator takes one file per run and defaults its schema path
-        to <code>../core-spec/</code> — which does not exist in a consumer repo. The
-        generated <code>Makefile</code> loops per file and always passes
-        <code>--schema</code>.</p>
+        <p>The upstream validator takes one file per run and resolves its schema at
+        <code>../core-spec/</code>. Bootstrap creates a <code>core-spec → schema/</code>
+        compatibility link, while the generated <code>Makefile</code> loops per file.</p>
       </div>
     </div>
   </div>
@@ -654,8 +654,8 @@ cd ~/git/retail-ossie &amp;&amp; make validate">Copy</button>
     <tbody>
       <tr><td><code>&lt;domain&gt;</code></td><td>Domain slug, lowercase <code>[a-z0-9-]</code>. Names the model folder and the starter file.</td></tr>
       <tr><td><code>[target-dir]</code></td><td>Where to create the repo. Defaults to <code>./&lt;domain&gt;-ossie</code>. Refuses a non-empty directory.</td></tr>
-      <tr><td><code>--from-clone DIR</code></td><td>Vendor from a local apache/ossie clone instead of downloading — offline, and pins that clone's HEAD.</td></tr>
-      <tr><td><code>--ref REF</code></td><td>Upstream branch, tag or SHA to pull from. Defaults to <code>main</code>.</td></tr>
+      <tr><td><code>--from-clone DIR</code></td><td>Vendor from a local apache/ossie clone at the requested ref — offline, without switching its checkout.</td></tr>
+      <tr><td><code>--ref REF</code></td><td>Upstream branch, tag or SHA to pull from. Defaults to <code>osi-0.1.1-rc1</code> (0.1.1 RC).</td></tr>
       <tr><td><code>--no-git</code></td><td>Skip <code>git init</code> and the initial commit.</td></tr>
       <tr><td><code>--no-skill</code></td><td>Do not install the authoring skill into <code>.claude/skills/</code>.</td></tr>
     </tbody>
@@ -687,7 +687,7 @@ cd ~/git/retail-ossie &amp;&amp; make validate">Copy</button>
       <p class="tag" style="margin-bottom:.6rem">Links</p>
       <p><a href="https://github.com/cskwork/ossie-domain-kit">Repository</a></p>
       <p><a href="https://github.com/apache/ossie">apache/ossie</a></p>
-      <p><a href="https://github.com/apache/ossie/blob/main/core-spec/spec.md">Core specification</a></p>
+      <p><a href="https://github.com/apache/ossie/blob/osi-0.1.1-rc1/core-spec/spec.md">Core specification</a></p>
     </div>
     <div>
       <p class="tag" style="margin-bottom:.6rem">Notice</p>

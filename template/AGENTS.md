@@ -30,6 +30,9 @@ The output is `models/**/*.yaml`. Everything else is scaffolding.
 6. **Do not weaken a check to make it pass.** If `make verify` flags a
    mismatch, either fix the model or add a dated, reasoned entry to the
    divergence accept-list. Never delete the check.
+7. **Treat `schema/osi-schema.json` as the contract.** It pins the allowed
+   optional keys and enums for this repository's upstream ref. Do not copy a
+   key from a different Ossie tag without checking the local schema first.
 
 ## Workflow for adding or changing a model
 
@@ -56,13 +59,10 @@ semantic_model:
         primary_key: [<col>]
         fields:
           - name: <field>           # required
-            datatype: String | Integer | Decimal | Float | Boolean |
-                      Date | Time | DateTime | DateTimeTz | Opaque
             dimension: {is_time: true}      # time dimensions only
             expression:             # required
               dialects:
-                - dialect: ANSI_SQL | SNOWFLAKE | BIGQUERY | DATABRICKS |
-                           MDX | TABLEAU | MAQL
+                - dialect: <dialect declared by schema/osi-schema.json>
                   expression: <sql>
     relationships:
       - name: ...                   # all five keys required
@@ -73,12 +73,13 @@ semantic_model:
     metrics:
       - name: ...                   # required
         expression: {dialects: [...]}   # required
-        datatype: ...
 ```
 
 `additionalProperties: false` applies throughout — an unknown key is an error,
 not a warning. Relationships may only reference datasets **inside the same
-model file**; cross-file joins go in `docs/overview.md`.
+model file**; cross-file joins go in `docs/overview.md`. The default 0.1.1
+schema does not define `datatype`; other refs may differ, so the vendored schema
+always wins over this quick-reference shape.
 
 ## Writing good definitions, not just valid YAML
 
@@ -103,4 +104,4 @@ model file**; cross-file joins go in `docs/overview.md`.
 | `[Unique] Duplicate ...` | two datasets/fields/metrics share a name |
 | `[Reference] ... unknown dataset` | relationship points outside this model file |
 | `[SQL] ...` | expression doesn't parse in the declared dialect |
-| `Error: Schema not found` | validator run without `--schema schema/osi-schema.json` |
+| `Error: Schema not found` | `core-spec -> schema` compatibility link is missing or broken |
