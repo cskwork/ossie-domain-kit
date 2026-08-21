@@ -25,15 +25,18 @@ over anything here.
 
 ## Authoring loop
 
-1. **Find the source of truth before writing any YAML.** DDL dump,
-   `information_schema`, dbt `manifest.json`, ORM entities, SQL mappers — in
-   that order of trust. See `references/evidence.md`.
-2. **Draft the model** — datasets → fields → relationships → metrics. Shape and
-   every enum: `references/spec-reference.md`.
+1. **Find the source of truth before writing any YAML.** `information_schema`,
+   DDL dump, dbt `manifest.json`, ORM entities, SQL mappers — in that order of
+   trust. Read `references/evidence.md` first: extraction recipe per artefact,
+   and how to grade *verified* / *inferred* / *proposed*.
+2. **Draft the model** — datasets → fields → relationships → metrics. Read
+   `references/spec-reference.md` before the first `datasets:` entry —
+   field-by-field shape and every enum.
 3. **Record evidence in the file header**: what you read, which commit or
    snapshot, and whether each dataset is *verified*, *inferred*, or *proposed*.
-4. **Validate**: `make validate FILE=<file>`. Iterate until PASS — never
-   report done on a failing model.
+4. **Validate**: `make validate FILE=<file>`. Iterate until PASS — never report
+   done on a failing model. `references/spec-reference.md` maps each error
+   message to its cause.
 5. **Verify against reality** if the repo has a verifier: `make verify`.
 6. **Update `docs/overview.md`** — catalogue row, plus any decision that the
    YAML cannot express (why a metric excludes a status, why two tables merged).
@@ -42,8 +45,7 @@ over anything here.
 
 - **Never invent a column or table.** Not found in an artefact → leave it out
   and say so. Keep physical types as evidence, but add only keys allowed by the
-  local schema. This is the failure mode that destroys trust in a semantic
-  layer.
+  local schema.
 - **`version:` is a `const`** in the schema. Copy the exact string from
   `schema/SOURCE.md`; anything else fails immediately.
 - **`additionalProperties: false` everywhere.** An unknown or misspelled key is
@@ -78,12 +80,5 @@ Check in this order — cheapest disqualifier first:
 3. Do two metrics compute the same number under different names?
 4. Does each metric's SQL match its prose description?
 5. Do physical types support the definition (for example, money versus a
-   floating-point value) without adding keys unsupported by the local schema?
+   floating-point value)?
 6. Is the verification status in `docs/overview.md` honest?
-
-## References
-
-- `references/spec-reference.md` — full field-by-field shape, enums, and the
-  errors each mistake produces.
-- `references/evidence.md` — turning DDL dumps, dbt manifests, ORM entities and
-  SQL mappers into datasets; grading verified / inferred / proposed.
