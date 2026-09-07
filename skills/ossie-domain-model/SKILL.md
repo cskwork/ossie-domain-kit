@@ -1,6 +1,6 @@
 ---
 name: ossie-domain-model
-description: Author, validate, and review Apache Ossie (formerly OSI) semantic models for a business domain — datasets, fields, relationships, and metrics in vendor-agnostic YAML that agents and BI tools share. Use when creating or editing files under models/**/*.yaml in an Ossie repo, bootstrapping a new domain semantic-model repository, converting a DDL dump / dbt manifest / SQL mappers into a semantic model, defining or reconciling metric definitions across tools, or when the user mentions Ossie, OSI, osi-schema.json, or "semantic model".
+description: Bootstrap Ossie domain repositories and author, validate, or review their semantic models from DDL, dbt manifests, ORM entities, or SQL mappers. Use for Ossie dataset, relationship, and metric definitions; not unrelated OSI networking or generic semantic-model discussions.
 ---
 
 # Ossie domain semantic models
